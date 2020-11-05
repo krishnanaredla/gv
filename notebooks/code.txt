@@ -1,0 +1,32 @@
+from cryptography.fernet import Fernet
+import json
+import os
+from typing import Dict
+from pathlib import Path
+
+class cryption:
+    def __init__(self,encryptPath:str="./data/encrypt.key"):
+        _keyPath  = Path(encryptPath)
+        if _keyPath.is_file():
+            file   = open(encryptPath,'rb')
+            self.key    = file.read()
+            file.close()
+        else:
+            self.key    = Fernet.generate_key()
+            file = open(encryptPath,'wb')
+            file.write(self.key)
+            file.close()
+    def encrpytJsonFile(self,file)->None:
+        with open(file) as f:
+            data = json.load(f)
+        for key,value in zip(data.keys(),data.values()):
+            data[key] = Fernet(self.key).encrypt(str(value).encode()).decode()
+        with open(file, 'w') as outfile:
+            json.dump(data, outfile)
+        return None
+    def decryptJsonFile(self,file)-> Dict:
+        with open(file) as f:
+            data = json.load(f)
+        for key,value in zip(data.keys(),data.values()):
+            data[key] = Fernet(self.key).decrypt(value.encode()).decode()
+        return data
